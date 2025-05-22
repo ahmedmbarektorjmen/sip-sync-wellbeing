@@ -25,6 +25,8 @@ const WaterIntakeForm: React.FC<WaterIntakeFormProps> = ({ onAddWater }) => {
     if (customAmount > 0) {
       onAddWater(customAmount);
       toast.success(`Added ${customAmount}ml of water!`);
+    } else {
+      toast.error("Please enter a valid amount greater than 0");
     }
   };
   

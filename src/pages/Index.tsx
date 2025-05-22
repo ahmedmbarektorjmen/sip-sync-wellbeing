@@ -10,7 +10,13 @@ import GoalSettings from "@/components/GoalSettings";
 import ReminderBanner from "@/components/ReminderBanner";
 import { WaterIntakeEntry, UserSettings } from "@/types/water";
 import { DropletIcon } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
+import { 
+  getWaterEntries, 
+  addWaterEntry, 
+  getUserSettings, 
+  updateUserSettings, 
+  getTodaysTotalIntake 
+} from "@/services/waterDatabase";
 
 const DEFAULT_SETTINGS: UserSettings = {
   dailyGoal: 2000,
@@ -25,58 +31,39 @@ const Index = () => {
   const [totalIntake, setTotalIntake] = useState<number>(0);
   const [showReminder, setShowReminder] = useState<boolean>(false);
   const [reminderTimerId, setReminderTimerId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Load data from localStorage on mount
+  // Load data from IndexedDB on mount
   useEffect(() => {
-    const savedEntries = localStorage.getItem("waterEntries");
-    const savedSettings = localStorage.getItem("waterSettings");
-    
-    if (savedEntries) {
+    const loadData = async () => {
       try {
-        const parsedEntries = JSON.parse(savedEntries);
-        // Convert string timestamps back to Date objects
-        const entriesWithDates = parsedEntries.map((entry: any) => ({
-          ...entry,
-          timestamp: new Date(entry.timestamp)
-        }));
-        setWaterEntries(entriesWithDates);
+        setIsLoading(true);
+        
+        // Load water entries
+        const entries = await getWaterEntries();
+        setWaterEntries(entries);
+        
+        // Load user settings
+        const userSettings = await getUserSettings();
+        setSettings(userSettings);
+        
+        // Calculate today's intake
+        const todaysTotal = await getTodaysTotalIntake();
+        setTotalIntake(todaysTotal);
       } catch (error) {
-        console.error("Failed to parse saved water entries:", error);
+        console.error("Error loading data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your data. Please refresh and try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
     
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setSettings(parsedSettings);
-      } catch (error) {
-        console.error("Failed to parse saved settings:", error);
-      }
-    }
-  }, []);
-  
-  // Calculate total intake whenever entries change
-  useEffect(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const todaysEntries = waterEntries.filter(entry => {
-      const entryDate = new Date(entry.timestamp);
-      entryDate.setHours(0, 0, 0, 0);
-      return entryDate.getTime() === today.getTime();
-    });
-    
-    const total = todaysEntries.reduce((sum, entry) => sum + entry.amount, 0);
-    setTotalIntake(total);
-    
-    // Save to localStorage
-    localStorage.setItem("waterEntries", JSON.stringify(waterEntries));
-  }, [waterEntries]);
-  
-  // Save settings whenever they change
-  useEffect(() => {
-    localStorage.setItem("waterSettings", JSON.stringify(settings));
-  }, [settings]);
+    loadData();
+  }, [toast]);
   
   // Setup reminders
   useEffect(() => {
@@ -102,35 +89,79 @@ const Index = () => {
     };
   }, [settings.reminderEnabled, settings.reminderInterval]);
   
-  const handleAddWater = (amount: number) => {
-    const newEntry: WaterIntakeEntry = {
-      id: uuidv4(),
-      amount: amount,
-      timestamp: new Date()
-    };
-    
-    setWaterEntries(prev => [newEntry, ...prev]);
-    
-    // Show goal completion toast
-    const newTotal = totalIntake + amount;
-    if (newTotal >= settings.dailyGoal && totalIntake < settings.dailyGoal) {
+  const handleAddWater = async (amount: number) => {
+    try {
+      // Add water entry to database
+      await addWaterEntry(amount);
+      
+      // Refresh water entries
+      const updatedEntries = await getWaterEntries();
+      setWaterEntries(updatedEntries);
+      
+      // Update today's total intake
+      const newTotal = await getTodaysTotalIntake();
+      setTotalIntake(newTotal);
+      
+      // Show goal completion toast
+      if (newTotal >= settings.dailyGoal && totalIntake < settings.dailyGoal) {
+        toast({
+          title: "Daily Goal Achieved! 🎉",
+          description: "Great job staying hydrated today!",
+        });
+      }
+    } catch (error) {
+      console.error("Error adding water:", error);
       toast({
-        title: "Daily Goal Achieved! 🎉",
-        description: "Great job staying hydrated today!",
+        title: "Error",
+        description: "Failed to add water entry. Please try again.",
+        variant: "destructive",
       });
     }
   };
   
-  const handleUpdateGoal = (goal: number) => {
-    setSettings(prev => ({ ...prev, dailyGoal: goal }));
+  const handleUpdateGoal = async (goal: number) => {
+    try {
+      const updatedSettings = { ...settings, dailyGoal: goal };
+      await updateUserSettings(updatedSettings);
+      setSettings(updatedSettings);
+    } catch (error) {
+      console.error("Error updating goal:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update goal. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleToggleReminder = (enabled: boolean) => {
-    setSettings(prev => ({ ...prev, reminderEnabled: enabled }));
+  const handleToggleReminder = async (enabled: boolean) => {
+    try {
+      const updatedSettings = { ...settings, reminderEnabled: enabled };
+      await updateUserSettings(updatedSettings);
+      setSettings(updatedSettings);
+    } catch (error) {
+      console.error("Error toggling reminder:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update reminder settings. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleUpdateReminderInterval = (minutes: number) => {
-    setSettings(prev => ({ ...prev, reminderInterval: minutes }));
+  const handleUpdateReminderInterval = async (minutes: number) => {
+    try {
+      const updatedSettings = { ...settings, reminderInterval: minutes };
+      await updateUserSettings(updatedSettings);
+      setSettings(updatedSettings);
+    } catch (error) {
+      console.error("Error updating reminder interval:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update reminder interval. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
