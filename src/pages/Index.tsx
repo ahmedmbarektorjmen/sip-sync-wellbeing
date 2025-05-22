@@ -8,7 +8,8 @@ import WaterIntakeForm from "@/components/WaterIntakeForm";
 import WaterHistory from "@/components/WaterHistory";
 import GoalSettings from "@/components/GoalSettings";
 import ReminderBanner from "@/components/ReminderBanner";
-import { WaterIntakeEntry, UserSettings } from "@/types/water";
+import SetupWizard from "@/components/SetupWizard";
+import { WaterIntakeEntry, UserSettings, CUP_SIZES } from "@/types/water";
 import { DropletIcon } from "lucide-react";
 import { 
   getWaterEntries, 
@@ -21,7 +22,8 @@ import {
 const DEFAULT_SETTINGS: UserSettings = {
   dailyGoal: 2000,
   reminderEnabled: true,
-  reminderInterval: 60
+  reminderInterval: 60,
+  setupCompleted: false
 };
 
 const Index = () => {
@@ -39,13 +41,13 @@ const Index = () => {
       try {
         setIsLoading(true);
         
-        // Load water entries
-        const entries = await getWaterEntries();
-        setWaterEntries(entries);
-        
         // Load user settings
         const userSettings = await getUserSettings();
         setSettings(userSettings);
+        
+        // Load water entries
+        const entries = await getWaterEntries();
+        setWaterEntries(entries);
         
         // Calculate today's intake
         const todaysTotal = await getTodaysTotalIntake();
@@ -74,7 +76,7 @@ const Index = () => {
     }
     
     // Setup new timer if reminders are enabled
-    if (settings.reminderEnabled) {
+    if (settings.reminderEnabled && settings.setupCompleted) {
       const timerId = window.setInterval(() => {
         setShowReminder(true);
       }, settings.reminderInterval * 60 * 1000);
@@ -87,7 +89,7 @@ const Index = () => {
         window.clearInterval(reminderTimerId);
       }
     };
-  }, [settings.reminderEnabled, settings.reminderInterval]);
+  }, [settings.reminderEnabled, settings.reminderInterval, settings.setupCompleted]);
   
   const handleAddWater = async (amount: number) => {
     try {
@@ -164,6 +166,58 @@ const Index = () => {
     }
   };
   
+  const handleSetupComplete = async (newSettings: Partial<UserSettings>) => {
+    try {
+      // Merge new settings with existing ones
+      const updatedSettings = { ...settings, ...newSettings };
+      await updateUserSettings(updatedSettings);
+      setSettings(updatedSettings);
+      
+      // Show success toast
+      toast({
+        title: "Setup Complete!",
+        description: `Your daily goal is ${updatedSettings.dailyGoal}ml of water.`,
+      });
+    } catch (error) {
+      console.error("Error saving setup:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save your preferences. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Display setup wizard if setup not completed
+  if (!settings.setupCompleted) {
+    return <SetupWizard onComplete={handleSetupComplete} />;
+  }
+  
+  // Calculate cups needed based on cup size
+  const getCupsNeeded = () => {
+    if (!settings.cupSize) return null;
+    
+    const cupVolume = CUP_SIZES.find(cup => cup.id === settings.cupSize)?.volume || 250;
+    const cupsNeeded = Math.ceil(settings.dailyGoal / cupVolume);
+    const cupsSoFar = Math.floor(totalIntake / cupVolume);
+    
+    return {
+      total: cupsNeeded,
+      completed: cupsSoFar,
+      remaining: Math.max(0, cupsNeeded - cupsSoFar)
+    };
+  };
+  
+  const cupsInfo = getCupsNeeded();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen water-wave-bg flex items-center justify-center">
+        <div className="animate-pulse text-water-800 font-medium">Loading...</div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen water-wave-bg pb-8">
       <header className="flex items-center justify-between p-4 md:p-6">
@@ -196,6 +250,13 @@ const Index = () => {
               ? `${settings.dailyGoal - totalIntake}ml to go` 
               : "Daily goal completed! 🎉"}
           </h2>
+          {cupsInfo && (
+            <div className="mt-2 text-sm text-water-700">
+              {cupsInfo.remaining > 0 
+                ? `${cupsInfo.completed}/${cupsInfo.total} cups • ${cupsInfo.remaining} more to go`
+                : `All ${cupsInfo.total} cups completed!`}
+            </div>
+          )}
         </div>
         
         <Card className="glass-card border-water-200/50">
@@ -211,7 +272,10 @@ const Index = () => {
               </TabsList>
               
               <TabsContent value="add" className="mt-0">
-                <WaterIntakeForm onAddWater={handleAddWater} />
+                <WaterIntakeForm 
+                  onAddWater={handleAddWater} 
+                  settings={settings}
+                />
               </TabsContent>
               
               <TabsContent value="history" className="mt-0">

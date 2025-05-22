@@ -1,24 +1,58 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import WaterDrop from "./WaterDrop";
 import { toast } from "sonner";
 import { PlusIcon, MinusIcon } from "lucide-react";
+import { CUP_SIZES, CupSize, UserSettings } from "@/types/water";
 
 interface WaterIntakeFormProps {
   onAddWater: (amount: number) => void;
+  settings: UserSettings;
 }
 
-const PRESET_AMOUNTS = [100, 200, 250, 300, 500];
-
-const WaterIntakeForm: React.FC<WaterIntakeFormProps> = ({ onAddWater }) => {
+const WaterIntakeForm: React.FC<WaterIntakeFormProps> = ({ onAddWater, settings }) => {
   const [customAmount, setCustomAmount] = useState<number>(250);
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  
+  // Get available presets based on user's cup size
+  const getPresetAmounts = (): number[] => {
+    const userCupSize = settings.cupSize ? 
+      CUP_SIZES.find(cup => cup.id === settings.cupSize)?.volume : null;
+    
+    if (userCupSize) {
+      return [
+        userCupSize,
+        userCupSize * 2,
+        Math.round(userCupSize * 0.5)
+      ].sort((a, b) => a - b);
+    }
+    
+    // Default presets if no cup size is set
+    return [100, 200, 250, 300, 500];
+  };
+  
+  const presetAmounts = getPresetAmounts();
+  
+  // Update custom amount when cup size changes
+  useEffect(() => {
+    if (settings.cupSize) {
+      const cupVolume = CUP_SIZES.find(cup => cup.id === settings.cupSize)?.volume || 250;
+      setCustomAmount(cupVolume);
+    }
+  }, [settings.cupSize]);
   
   const handleAddPreset = (amount: number) => {
     onAddWater(amount);
+    setSelectedPreset(amount.toString());
     toast.success(`Added ${amount}ml of water!`);
+    
+    // Reset selection after a delay
+    setTimeout(() => {
+      setSelectedPreset(null);
+    }, 500);
   };
   
   const handleAddCustom = () => {
@@ -44,11 +78,15 @@ const WaterIntakeForm: React.FC<WaterIntakeFormProps> = ({ onAddWater }) => {
       <h2 className="text-xl font-semibold text-water-800">Add Water Intake</h2>
       
       <div className="flex flex-wrap gap-2 justify-center">
-        {PRESET_AMOUNTS.map((amount) => (
+        {presetAmounts.map((amount) => (
           <Button
             key={amount}
             variant="outline"
-            className="flex items-center gap-2 h-auto py-3 px-4 border-water-200 hover:bg-water-100 hover:text-water-800"
+            className={`flex items-center gap-2 h-auto py-3 px-4 border-water-200 ${
+              selectedPreset === amount.toString() 
+                ? "bg-water-100 text-water-800" 
+                : "hover:bg-water-100 hover:text-water-800"
+            }`}
             onClick={() => handleAddPreset(amount)}
           >
             <WaterDrop size="sm" className="text-water-500" />
