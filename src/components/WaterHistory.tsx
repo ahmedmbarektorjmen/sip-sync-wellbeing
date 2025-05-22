@@ -1,0 +1,45 @@
+
+import React from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import WaterHistoryItem from "./WaterHistoryItem";
+import { WaterIntakeEntry } from "@/types/water";
+
+interface WaterHistoryProps {
+  entries: WaterIntakeEntry[];
+}
+
+const WaterHistory: React.FC<WaterHistoryProps> = ({ entries }) => {
+  if (entries.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-6 text-center">
+        <p className="text-muted-foreground">No water intake recorded yet.</p>
+        <p className="text-sm text-muted-foreground">Add some water to see your history.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold text-water-800">Today's Intake</h2>
+      
+      <ScrollArea className="h-[300px] pr-4">
+        <div className="space-y-1">
+          {entries.map((entry, index) => (
+            <React.Fragment key={entry.id}>
+              <WaterHistoryItem 
+                amount={entry.amount} 
+                timestamp={entry.timestamp} 
+              />
+              {index < entries.length - 1 && (
+                <Separator className="my-1 bg-water-100" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+};
+
+export default WaterHistory;
