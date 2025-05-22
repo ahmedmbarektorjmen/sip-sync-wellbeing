@@ -17,25 +17,6 @@ const WaterIntakeForm: React.FC<WaterIntakeFormProps> = ({ onAddWater, settings 
   const [customAmount, setCustomAmount] = useState<number>(250);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   
-  // Get available presets based on user's cup size
-  const getPresetAmounts = (): number[] => {
-    const userCupSize = settings.cupSize ? 
-      CUP_SIZES.find(cup => cup.id === settings.cupSize)?.volume : null;
-    
-    if (userCupSize) {
-      return [
-        userCupSize,
-        userCupSize * 2,
-        Math.round(userCupSize * 0.5)
-      ].sort((a, b) => a - b);
-    }
-    
-    // Default presets if no cup size is set
-    return [100, 200, 250, 300, 500];
-  };
-  
-  const presetAmounts = getPresetAmounts();
-  
   // Update custom amount when cup size changes
   useEffect(() => {
     if (settings.cupSize) {
@@ -77,21 +58,37 @@ const WaterIntakeForm: React.FC<WaterIntakeFormProps> = ({ onAddWater, settings 
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-water-800">Add Water Intake</h2>
       
-      <div className="flex flex-wrap gap-2 justify-center">
-        {presetAmounts.map((amount) => (
-          <Button
-            key={amount}
-            variant="outline"
-            className={`flex items-center gap-2 h-auto py-3 px-4 border-water-200 ${
-              selectedPreset === amount.toString() 
-                ? "bg-water-100 text-water-800" 
-                : "hover:bg-water-100 hover:text-water-800"
-            }`}
-            onClick={() => handleAddPreset(amount)}
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+        {CUP_SIZES.map((cup) => (
+          <div 
+            key={cup.id} 
+            className={cn(
+              "flex flex-col items-center cursor-pointer transition-all transform",
+              selectedPreset === cup.volume.toString() ? "scale-110" : "hover:scale-105"
+            )}
+            onClick={() => handleAddPreset(cup.volume)}
           >
-            <WaterDrop size="sm" className="text-water-500" />
-            <span>{amount}ml</span>
-          </Button>
+            <div 
+              className={cn(
+                "relative rounded-lg overflow-hidden border-2 transition-colors",
+                selectedPreset === cup.volume.toString() 
+                  ? "border-water-500" 
+                  : "border-transparent hover:border-water-300"
+              )}
+            >
+              <div 
+                className={cn(
+                  "w-16 h-16 md:w-20 md:h-20 bg-water-100 flex items-center justify-center",
+                )}
+              >
+                <CupImage size={cup.id} />
+              </div>
+            </div>
+            <div className="mt-1 text-center">
+              <div className="font-medium">{cup.label}</div>
+              <div className="text-xs text-muted-foreground">{cup.volume}ml</div>
+            </div>
+          </div>
         ))}
       </div>
       
@@ -147,6 +144,61 @@ const WaterIntakeForm: React.FC<WaterIntakeFormProps> = ({ onAddWater, settings 
       </div>
     </div>
   );
+};
+
+// Cup image component with different sizes
+const CupImage = ({ size }: { size: string }) => {
+  // Scale factor for cup sizes
+  const getHeightScale = () => {
+    switch (size) {
+      case 'xs': return 0.6;
+      case 's': return 0.7;
+      case 'm': return 0.8;
+      case 'l': return 0.9;
+      case 'xl': return 1;
+      default: return 0.8;
+    }
+  };
+  
+  const heightScale = getHeightScale();
+  const waterHeight = `${heightScale * 70}%`;
+  
+  return (
+    <div className="relative w-10 h-14 flex items-center justify-center">
+      {/* Cup outline */}
+      <div 
+        className="absolute w-full border-2 border-water-400 rounded-b-lg overflow-hidden"
+        style={{ 
+          height: `${heightScale * 100}%`, 
+          bottom: 0,
+          borderTopLeftRadius: `${3 + (1 - heightScale) * 5}px`,
+          borderTopRightRadius: `${3 + (1 - heightScale) * 5}px`
+        }}
+      >
+        {/* Water fill */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 bg-water-400/50"
+          style={{ height: waterHeight }}
+        />
+      </div>
+      
+      {/* Cup handle */}
+      <div 
+        className="absolute border-2 border-water-400 rounded-r-full"
+        style={{ 
+          height: `${heightScale * 40}%`,
+          width: '25%',
+          right: '-20%',
+          top: `${30 + (1 - heightScale) * 10}%`
+        }}
+      />
+    </div>
+  );
+};
+
+// Helper function for class names
+const cn = (...classes: (string | boolean | undefined)[]) => {
+  return classes.filter(Boolean).join(' ');
 };
 
 export default WaterIntakeForm;

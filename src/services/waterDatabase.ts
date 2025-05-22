@@ -1,4 +1,3 @@
-
 import { WaterIntakeEntry, UserSettings } from "@/types/water";
 import { v4 as uuidv4 } from "uuid";
 
@@ -7,6 +6,7 @@ const DB_NAME = "HydroTrackDB";
 const DB_VERSION = 1;
 const WATER_STORE = "waterEntries";
 const SETTINGS_STORE = "userSettings";
+const ACHIEVEMENT_STORE = "achievements";
 
 // Default user settings
 const DEFAULT_SETTINGS: UserSettings = {
@@ -48,6 +48,10 @@ const openDB = (): Promise<IDBDatabase> => {
           const settingsStore = transaction.objectStore(SETTINGS_STORE);
           settingsStore.add({ id: "userSettings", ...DEFAULT_SETTINGS });
         }
+      }
+      
+      if (!db.objectStoreNames.contains(ACHIEVEMENT_STORE)) {
+        db.createObjectStore(ACHIEVEMENT_STORE, { keyPath: "id" });
       }
     };
   });
@@ -109,6 +113,31 @@ export const addWaterEntry = async (amount: number): Promise<WaterIntakeEntry> =
       
       request.onerror = () => {
         console.error("Error adding water entry");
+        reject(request.error);
+      };
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    throw error;
+  }
+};
+
+// Delete a water entry
+export const deleteWaterEntry = async (id: string): Promise<void> => {
+  try {
+    const db = await openDB();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(WATER_STORE, "readwrite");
+      const store = transaction.objectStore(WATER_STORE);
+      const request = store.delete(id);
+      
+      request.onsuccess = () => {
+        resolve();
+      };
+      
+      request.onerror = () => {
+        console.error("Error deleting water entry");
         reject(request.error);
       };
     });
@@ -189,4 +218,80 @@ export const getTodaysTotalIntake = async (): Promise<number> => {
     console.error("Error calculating today's intake:", error);
     return 0;
   }
+};
+
+// Get water entries for a specific date range
+export const getWaterEntriesForRange = async (startDate: Date, endDate: Date): Promise<WaterIntakeEntry[]> => {
+  try {
+    const entries = await getWaterEntries();
+    
+    return entries.filter(entry => {
+      const entryTime = entry.timestamp.getTime();
+      return entryTime >= startDate.getTime() && entryTime <= endDate.getTime();
+    });
+  } catch (error) {
+    console.error("Error fetching water entries for range:", error);
+    return [];
+  }
+};
+
+// Get weekly water intake data
+export const getWeeklyIntakeData = async (): Promise<{day: string; amount: number}[]> => {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - dayOfWeek);
+  startOfWeek.setHours(0, 0, 0, 0);
+  
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+  
+  const entries = await getWaterEntriesForRange(startOfWeek, endOfWeek);
+  
+  // Group entries by day of week
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weeklyData = dayNames.map(day => ({ day, amount: 0 }));
+  
+  entries.forEach(entry => {
+    const entryDay = entry.timestamp.getDay();
+    weeklyData[entryDay].amount += entry.amount;
+  });
+  
+  return weeklyData;
+};
+
+// Get monthly water intake data
+export const getMonthlyIntakeData = async (): Promise<{date: string; amount: number}[]> => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  
+  const startOfMonth = new Date(year, month, 1);
+  const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
+  
+  const entries = await getWaterEntriesForRange(startOfMonth, endOfMonth);
+  
+  // Group entries by day of month
+  const daysInMonth = endOfMonth.getDate();
+  const monthlyData: {date: string; amount: number}[] = [];
+  
+  for (let i = 1; i <= daysInMonth; i++) {
+    const dateStr = `${i}`;
+    const dayStart = new Date(year, month, i);
+    dayStart.setHours(0, 0, 0, 0);
+    
+    const dayEnd = new Date(year, month, i);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    const dayEntries = entries.filter(entry => {
+      const entryTime = entry.timestamp.getTime();
+      return entryTime >= dayStart.getTime() && entryTime <= dayEnd.getTime();
+    });
+    
+    const totalAmount = dayEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    monthlyData.push({ date: dateStr, amount: totalAmount });
+  }
+  
+  return monthlyData;
 };

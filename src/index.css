@@ -75,6 +75,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Prevent text selection */
+  :not(input):not(textarea):not([contenteditable="true"]) {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
 }
 
 .water-drop {

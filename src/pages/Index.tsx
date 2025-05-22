@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,10 +13,14 @@ import { DropletIcon } from "lucide-react";
 import { 
   getWaterEntries, 
   addWaterEntry, 
+  deleteWaterEntry,
   getUserSettings, 
   updateUserSettings, 
   getTodaysTotalIntake 
 } from "@/services/waterDatabase";
+import WeatherAdjustment from "@/components/WeatherAdjustment";
+import HydrationTrends from "@/components/HydrationTrends";
+import AchievementDisplay from "@/components/AchievementDisplay";
 
 const DEFAULT_SETTINGS: UserSettings = {
   dailyGoal: 2000,
@@ -116,6 +119,33 @@ const Index = () => {
       toast({
         title: "Error",
         description: "Failed to add water entry. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveWater = async (entryId: string) => {
+    try {
+      // Delete water entry from database
+      await deleteWaterEntry(entryId);
+      
+      // Refresh water entries
+      const updatedEntries = await getWaterEntries();
+      setWaterEntries(updatedEntries);
+      
+      // Update today's total intake
+      const newTotal = await getTodaysTotalIntake();
+      setTotalIntake(newTotal);
+      
+      toast({
+        title: "Entry Removed",
+        description: "Water entry has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Error removing water entry:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove water entry. Please try again.",
         variant: "destructive",
       });
     }
@@ -219,11 +249,11 @@ const Index = () => {
   }
   
   return (
-    <div className="min-h-screen water-wave-bg pb-8">
+    <div className="min-h-screen water-wave-bg pb-8 select-none">
       <header className="flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center gap-2">
           <DropletIcon className="h-6 w-6 text-water-600" />
-          <h1 className="text-2xl font-bold text-water-800">HydroTrack</h1>
+          <h1 className="text-2xl font-bold text-water-800">HydrateMe</h1>
         </div>
         <GoalSettings 
           dailyGoal={settings.dailyGoal}
@@ -238,6 +268,12 @@ const Index = () => {
       {showReminder && (
         <ReminderBanner onDismiss={() => setShowReminder(false)} className="mx-4 md:mx-8" />
       )}
+      
+      <WeatherAdjustment 
+        settings={settings} 
+        onUpdateGoal={handleUpdateGoal} 
+        className="mx-4 md:mx-8 mb-4"
+      />
       
       <main className="container px-4 pt-4 max-w-3xl">
         <div className="flex flex-col items-center mb-8">
@@ -259,15 +295,20 @@ const Index = () => {
           )}
         </div>
         
-        <Card className="glass-card border-water-200/50">
+        <AchievementDisplay totalIntake={totalIntake} settings={settings} className="mb-6" />
+        
+        <Card className="glass-card border-water-200/50 mb-6">
           <CardContent className="p-4 md:p-6">
             <Tabs defaultValue="add" className="w-full">
-              <TabsList className="grid grid-cols-2 mb-6 bg-water-100/50">
+              <TabsList className="grid grid-cols-3 mb-6 bg-water-100/50">
                 <TabsTrigger value="add" className="data-[state=active]:bg-white">
                   Add Water
                 </TabsTrigger>
                 <TabsTrigger value="history" className="data-[state=active]:bg-white">
                   History
+                </TabsTrigger>
+                <TabsTrigger value="trends" className="data-[state=active]:bg-white">
+                  Trends
                 </TabsTrigger>
               </TabsList>
               
@@ -279,7 +320,14 @@ const Index = () => {
               </TabsContent>
               
               <TabsContent value="history" className="mt-0">
-                <WaterHistory entries={waterEntries} />
+                <WaterHistory 
+                  entries={waterEntries}
+                  onRemoveEntry={handleRemoveWater}
+                />
+              </TabsContent>
+              
+              <TabsContent value="trends" className="mt-0">
+                <HydrationTrends entries={waterEntries} />
               </TabsContent>
             </Tabs>
           </CardContent>

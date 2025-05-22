@@ -7,9 +7,10 @@ import { WaterIntakeEntry } from "@/types/water";
 
 interface WaterHistoryProps {
   entries: WaterIntakeEntry[];
+  onRemoveEntry: (id: string) => void;
 }
 
-const WaterHistory: React.FC<WaterHistoryProps> = ({ entries }) => {
+const WaterHistory: React.FC<WaterHistoryProps> = ({ entries, onRemoveEntry }) => {
   if (entries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-6 text-center">
@@ -28,8 +29,10 @@ const WaterHistory: React.FC<WaterHistoryProps> = ({ entries }) => {
           {entries.map((entry, index) => (
             <React.Fragment key={entry.id}>
               <WaterHistoryItem 
+                id={entry.id}
                 amount={entry.amount} 
-                timestamp={entry.timestamp} 
+                timestamp={entry.timestamp}
+                onRemove={onRemoveEntry}
               />
               {index < entries.length - 1 && (
                 <Separator className="my-1 bg-water-100" />
