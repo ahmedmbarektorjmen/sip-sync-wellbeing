@@ -256,19 +256,19 @@ const Index = () => {
   
   return (
     <div className="min-h-screen water-wave-bg mobile-content">
-      <header className="flex items-center justify-between p-4 md:p-6">
+      <header className="flex items-center justify-between p-3 md:p-6 animate-fade-in">
         <div className="flex items-center gap-2">
-          <DropletIcon className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">HydrateMe</h1>
+          <DropletIcon className="h-5 w-5 md:h-6 md:w-6 text-primary animate-wave" />
+          <h1 className="text-lg md:text-2xl font-bold text-foreground">HydrateMe</h1>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            className="rounded-full"
+            className="rounded-full hover-scale"
           >
-            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            {theme === 'light' ? <Moon className="h-4 w-4 md:h-5 md:w-5" /> : <Sun className="h-4 w-4 md:h-5 md:w-5" />}
           </Button>
           <div className="hidden md:block">
             <GoalSettings 
@@ -284,28 +284,30 @@ const Index = () => {
       </header>
       
       {showReminder && (
-        <ReminderBanner onDismiss={() => setShowReminder(false)} className="mx-4 md:mx-8" />
+        <ReminderBanner onDismiss={() => setShowReminder(false)} className="mx-3 md:mx-8 animate-slide-in-right" />
       )}
       
       <WeatherAdjustment 
         settings={settings} 
         onUpdateGoal={handleUpdateGoal} 
-        className="mx-4 md:mx-8 mb-4"
+        className="mx-3 md:mx-8 mb-4 animate-fade-in"
       />
       
-      <main className="container px-4 pt-4 max-w-3xl">
-        <div className="flex flex-col items-center mb-8">
+      <main className="container px-3 md:px-4 pt-4 max-w-4xl">
+        {/* Main content - always visible */}
+        <div className="flex flex-col items-center mb-6 md:mb-8 animate-scale-in">
           <WaterProgressCircle 
             value={totalIntake} 
             max={settings.dailyGoal} 
+            className="scale-90 md:scale-100"
           />
-          <h2 className="mt-4 text-xl font-medium text-foreground text-center">
+          <h2 className="mt-3 md:mt-4 text-lg md:text-xl font-medium text-foreground text-center animate-fade-in">
             {totalIntake < settings.dailyGoal 
               ? `${settings.dailyGoal - totalIntake}ml to go` 
               : "Daily goal completed! 🎉"}
           </h2>
           {cupsProgress && (
-            <div className="mt-2 text-sm text-muted-foreground text-center">
+            <div className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground text-center animate-fade-in">
               {cupsProgress.remaining > 0 
                 ? `${cupsProgress.completed}/${cupsProgress.total} cups • ${cupsProgress.remaining} more to go`
                 : `All ${cupsProgress.total} cups completed!`}
@@ -313,29 +315,35 @@ const Index = () => {
           )}
         </div>
         
-        <AchievementDisplay totalIntake={totalIntake} settings={settings} className="mb-6" />
+        <AchievementDisplay totalIntake={totalIntake} settings={settings} className="mb-4 md:mb-6 animate-fade-in" />
         
-        <Card className="glass-card border-border/50 mb-6">
-          <CardContent className="p-4 md:p-6">
-            <div className="block md:hidden">
-              {/* Mobile content based on active tab */}
+        {/* Mobile content based on active tab */}
+        <div className="block md:hidden">
+          <Card className="glass-card border-border/50 mb-4 animate-scale-in">
+            <CardContent className="p-3 md:p-6">
               {activeTab === 'add' && (
-                <WaterIntakeForm 
-                  onAddWater={handleAddWater} 
-                  settings={settings}
-                />
+                <div className="animate-fade-in">
+                  <WaterIntakeForm 
+                    onAddWater={handleAddWater} 
+                    settings={settings}
+                  />
+                </div>
               )}
               {activeTab === 'history' && (
-                <WaterHistory 
-                  entries={waterEntries}
-                  onRemoveEntry={handleRemoveWater}
-                />
+                <div className="animate-fade-in">
+                  <WaterHistory 
+                    entries={waterEntries}
+                    onRemoveEntry={handleRemoveWater}
+                  />
+                </div>
               )}
               {activeTab === 'trends' && (
-                <HydrationTrends entries={waterEntries} />
+                <div className="animate-fade-in">
+                  <HydrationTrends entries={waterEntries} />
+                </div>
               )}
               {activeTab === 'settings' && (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6 animate-fade-in">
                   <ThemeSettings />
                   <GoalSettings 
                     dailyGoal={settings.dailyGoal}
@@ -347,48 +355,49 @@ const Index = () => {
                   />
                 </div>
               )}
-            </div>
-            
-            <div className="hidden md:block">
-              {/* Desktop tabs */}
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Desktop content */}
+        <div className="hidden md:block">
+          <Card className="glass-card border-border/50 mb-6 animate-scale-in">
+            <CardContent className="p-4 md:p-6">
               <Tabs defaultValue="add" className="w-full">
                 <TabsList className="grid grid-cols-3 mb-6 bg-muted/50">
-                  <TabsTrigger value="add" className="data-[state=active]:bg-background">
+                  <TabsTrigger value="add" className="data-[state=active]:bg-background transition-all hover-scale">
                     Add Water
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="data-[state=active]:bg-background">
+                  <TabsTrigger value="history" className="data-[state=active]:bg-background transition-all hover-scale">
                     History
                   </TabsTrigger>
-                  <TabsTrigger value="trends" className="data-[state=active]:bg-background">
+                  <TabsTrigger value="trends" className="data-[state=active]:bg-background transition-all hover-scale">
                     Trends
                   </TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="add" className="mt-0">
+                <TabsContent value="add" className="mt-0 animate-fade-in">
                   <WaterIntakeForm 
                     onAddWater={handleAddWater} 
                     settings={settings}
                   />
                 </TabsContent>
                 
-                <TabsContent value="history" className="mt-0">
+                <TabsContent value="history" className="mt-0 animate-fade-in">
                   <WaterHistory 
                     entries={waterEntries}
                     onRemoveEntry={handleRemoveWater}
                   />
                 </TabsContent>
                 
-                <TabsContent value="trends" className="mt-0">
+                <TabsContent value="trends" className="mt-0 animate-fade-in">
                   <HydrationTrends entries={waterEntries} />
                 </TabsContent>
               </Tabs>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Theme settings for desktop - in a separate card */}
-        <div className="hidden md:block">
-          <Card className="glass-card border-border/50 mb-6">
+          <Card className="glass-card border-border/50 mb-6 animate-scale-in">
             <CardContent className="p-4 md:p-6">
               <ThemeSettings />
             </CardContent>
@@ -396,7 +405,6 @@ const Index = () => {
         </div>
       </main>
       
-      {/* Mobile Navigation */}
       <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
