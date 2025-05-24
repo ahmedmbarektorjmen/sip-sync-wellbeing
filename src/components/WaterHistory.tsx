@@ -22,7 +22,7 @@ const WaterHistory: React.FC<WaterHistoryProps> = ({ entries, onRemoveEntry }) =
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-water-800">Today's Intake</h2>
+      <h2 className="text-xl font-semibold text-foreground">Today's Intake</h2>
       
       <ScrollArea className="h-[300px] pr-4">
         <div className="space-y-1">
@@ -35,7 +35,7 @@ const WaterHistory: React.FC<WaterHistoryProps> = ({ entries, onRemoveEntry }) =
                 onRemove={onRemoveEntry}
               />
               {index < entries.length - 1 && (
-                <Separator className="my-1 bg-water-100" />
+                <Separator className="my-1 bg-border" />
               )}
             </React.Fragment>
           ))}

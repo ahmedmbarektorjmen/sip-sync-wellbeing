@@ -28,7 +28,7 @@ const WaterHistoryItem: React.FC<WaterHistoryItemProps> = ({
   return (
     <div className={cn(
       "flex items-center justify-between p-3 rounded-lg transition-colors",
-      "hover:bg-water-100 dark:hover:bg-water-900/20",
+      "hover:bg-muted/50 dark:hover:bg-muted/20",
       className
     )}>
       <div className="flex items-center gap-3">
@@ -43,13 +43,13 @@ const WaterHistoryItem: React.FC<WaterHistoryItemProps> = ({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground hidden sm:block">
           {format(timestamp, "MMM d")}
         </p>
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-8 w-8 rounded-full hover:bg-red-100 hover:text-red-600" 
+          className="h-8 w-8 rounded-full hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30" 
           onClick={handleRemove}
         >
           <Trash2 className="h-4 w-4" />

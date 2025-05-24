@@ -65,6 +65,31 @@
     --input: 215 20% 25%;
     --ring: 196 100% 50%;
   }
+
+  /* Custom theme variations */
+  .theme-ocean {
+    --primary: 210 100% 50%;
+    --primary-foreground: 210 40% 98%;
+    --water-primary: 210 100% 50%;
+  }
+
+  .theme-forest {
+    --primary: 142 76% 36%;
+    --primary-foreground: 210 40% 98%;
+    --water-primary: 142 76% 36%;
+  }
+
+  .theme-sunset {
+    --primary: 25 95% 53%;
+    --primary-foreground: 210 40% 98%;
+    --water-primary: 25 95% 53%;
+  }
+
+  .theme-lavender {
+    --primary: 270 50% 60%;
+    --primary-foreground: 210 40% 98%;
+    --water-primary: 270 50% 60%;
+  }
 }
 
 @layer base {
@@ -76,12 +101,17 @@
     @apply bg-background text-foreground;
   }
   
-  /* Prevent text selection */
-  :not(input):not(textarea):not([contenteditable="true"]) {
+  /* Prevent text selection on non-interactive elements */
+  :not(input):not(textarea):not([contenteditable="true"]):not([role="textbox"]) {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+  }
+
+  /* Allow text selection on specific elements */
+  p, span, h1, h2, h3, h4, h5, h6 {
+    user-select: text;
   }
 }
 
@@ -103,4 +133,36 @@
   background-attachment: fixed;
   background-size: cover;
   background-position: center;
+}
+
+/* Mobile bottom navigation */
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0;
+}
+
+.dark .mobile-nav {
+  background: rgba(0, 0, 0, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+  .mobile-nav {
+    display: none;
+  }
+}
+
+/* Mobile content padding */
+@media (max-width: 767px) {
+  .mobile-content {
+    padding-bottom: 80px;
+  }
 }

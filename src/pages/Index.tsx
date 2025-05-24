@@ -2,14 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { useTheme } from "@/contexts/ThemeContext";
 import WaterProgressCircle from "@/components/WaterProgressCircle";
 import WaterIntakeForm from "@/components/WaterIntakeForm";
 import WaterHistory from "@/components/WaterHistory";
 import GoalSettings from "@/components/GoalSettings";
 import ReminderBanner from "@/components/ReminderBanner";
 import SetupWizard from "@/components/SetupWizard";
+import ThemeSettings from "@/components/ThemeSettings";
+import MobileNavigation from "@/components/MobileNavigation";
 import { WaterIntakeEntry, UserSettings, CUP_SIZES } from "@/types/water";
-import { DropletIcon } from "lucide-react";
+import { DropletIcon, Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { 
   getWaterEntries, 
   addWaterEntry, 
@@ -31,12 +35,14 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 const Index = () => {
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const [waterEntries, setWaterEntries] = useState<WaterIntakeEntry[]>([]);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [totalIntake, setTotalIntake] = useState<number>(0);
   const [showReminder, setShowReminder] = useState<boolean>(false);
   const [reminderTimerId, setReminderTimerId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<string>('add');
   
   // Load data from IndexedDB on mount
   useEffect(() => {
@@ -223,8 +229,8 @@ const Index = () => {
     return <SetupWizard onComplete={handleSetupComplete} />;
   }
   
-  // Calculate cups needed based on cup size
-  const getCupsNeeded = () => {
+  // Calculate cups progress (only for display, not total intake)
+  const getCupsProgress = () => {
     if (!settings.cupSize) return null;
     
     const cupVolume = CUP_SIZES.find(cup => cup.id === settings.cupSize)?.volume || 250;
@@ -238,31 +244,43 @@ const Index = () => {
     };
   };
   
-  const cupsInfo = getCupsNeeded();
+  const cupsProgress = getCupsProgress();
   
   if (isLoading) {
     return (
       <div className="min-h-screen water-wave-bg flex items-center justify-center">
-        <div className="animate-pulse text-water-800 font-medium">Loading...</div>
+        <div className="animate-pulse text-foreground font-medium">Loading...</div>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen water-wave-bg pb-8 select-none">
+    <div className="min-h-screen water-wave-bg mobile-content">
       <header className="flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center gap-2">
-          <DropletIcon className="h-6 w-6 text-water-600" />
-          <h1 className="text-2xl font-bold text-water-800">HydrateMe</h1>
+          <DropletIcon className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">HydrateMe</h1>
         </div>
-        <GoalSettings 
-          dailyGoal={settings.dailyGoal}
-          onUpdateGoal={handleUpdateGoal}
-          reminderEnabled={settings.reminderEnabled}
-          onToggleReminder={handleToggleReminder}
-          reminderInterval={settings.reminderInterval}
-          onUpdateReminderInterval={handleUpdateReminderInterval}
-        />
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="rounded-full"
+          >
+            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+          </Button>
+          <div className="hidden md:block">
+            <GoalSettings 
+              dailyGoal={settings.dailyGoal}
+              onUpdateGoal={handleUpdateGoal}
+              reminderEnabled={settings.reminderEnabled}
+              onToggleReminder={handleToggleReminder}
+              reminderInterval={settings.reminderInterval}
+              onUpdateReminderInterval={handleUpdateReminderInterval}
+            />
+          </div>
+        </div>
       </header>
       
       {showReminder && (
@@ -281,58 +299,105 @@ const Index = () => {
             value={totalIntake} 
             max={settings.dailyGoal} 
           />
-          <h2 className="mt-4 text-xl font-medium text-water-800">
+          <h2 className="mt-4 text-xl font-medium text-foreground text-center">
             {totalIntake < settings.dailyGoal 
               ? `${settings.dailyGoal - totalIntake}ml to go` 
               : "Daily goal completed! 🎉"}
           </h2>
-          {cupsInfo && (
-            <div className="mt-2 text-sm text-water-700">
-              {cupsInfo.remaining > 0 
-                ? `${cupsInfo.completed}/${cupsInfo.total} cups • ${cupsInfo.remaining} more to go`
-                : `All ${cupsInfo.total} cups completed!`}
+          {cupsProgress && (
+            <div className="mt-2 text-sm text-muted-foreground text-center">
+              {cupsProgress.remaining > 0 
+                ? `${cupsProgress.completed}/${cupsProgress.total} cups • ${cupsProgress.remaining} more to go`
+                : `All ${cupsProgress.total} cups completed!`}
             </div>
           )}
         </div>
         
         <AchievementDisplay totalIntake={totalIntake} settings={settings} className="mb-6" />
         
-        <Card className="glass-card border-water-200/50 mb-6">
+        <Card className="glass-card border-border/50 mb-6">
           <CardContent className="p-4 md:p-6">
-            <Tabs defaultValue="add" className="w-full">
-              <TabsList className="grid grid-cols-3 mb-6 bg-water-100/50">
-                <TabsTrigger value="add" className="data-[state=active]:bg-white">
-                  Add Water
-                </TabsTrigger>
-                <TabsTrigger value="history" className="data-[state=active]:bg-white">
-                  History
-                </TabsTrigger>
-                <TabsTrigger value="trends" className="data-[state=active]:bg-white">
-                  Trends
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="add" className="mt-0">
+            <div className="block md:hidden">
+              {/* Mobile content based on active tab */}
+              {activeTab === 'add' && (
                 <WaterIntakeForm 
                   onAddWater={handleAddWater} 
                   settings={settings}
                 />
-              </TabsContent>
-              
-              <TabsContent value="history" className="mt-0">
+              )}
+              {activeTab === 'history' && (
                 <WaterHistory 
                   entries={waterEntries}
                   onRemoveEntry={handleRemoveWater}
                 />
-              </TabsContent>
-              
-              <TabsContent value="trends" className="mt-0">
+              )}
+              {activeTab === 'trends' && (
                 <HydrationTrends entries={waterEntries} />
-              </TabsContent>
-            </Tabs>
+              )}
+              {activeTab === 'settings' && (
+                <div className="space-y-6">
+                  <ThemeSettings />
+                  <GoalSettings 
+                    dailyGoal={settings.dailyGoal}
+                    onUpdateGoal={handleUpdateGoal}
+                    reminderEnabled={settings.reminderEnabled}
+                    onToggleReminder={handleToggleReminder}
+                    reminderInterval={settings.reminderInterval}
+                    onUpdateReminderInterval={handleUpdateReminderInterval}
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="hidden md:block">
+              {/* Desktop tabs */}
+              <Tabs defaultValue="add" className="w-full">
+                <TabsList className="grid grid-cols-3 mb-6 bg-muted/50">
+                  <TabsTrigger value="add" className="data-[state=active]:bg-background">
+                    Add Water
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="data-[state=active]:bg-background">
+                    History
+                  </TabsTrigger>
+                  <TabsTrigger value="trends" className="data-[state=active]:bg-background">
+                    Trends
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="add" className="mt-0">
+                  <WaterIntakeForm 
+                    onAddWater={handleAddWater} 
+                    settings={settings}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="history" className="mt-0">
+                  <WaterHistory 
+                    entries={waterEntries}
+                    onRemoveEntry={handleRemoveWater}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="trends" className="mt-0">
+                  <HydrationTrends entries={waterEntries} />
+                </TabsContent>
+              </Tabs>
+            </div>
           </CardContent>
         </Card>
+
+        {/* Theme settings for desktop - in a separate card */}
+        <div className="hidden md:block">
+          <Card className="glass-card border-border/50 mb-6">
+            <CardContent className="p-4 md:p-6">
+              <ThemeSettings />
+            </CardContent>
+          </Card>
+        </div>
       </main>
+      
+      {/* Mobile Navigation */}
+      <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 };
