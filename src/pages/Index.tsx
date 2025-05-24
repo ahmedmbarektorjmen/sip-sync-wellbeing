@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +13,7 @@ import SetupWizard from "@/components/SetupWizard";
 import ThemeSettings from "@/components/ThemeSettings";
 import MobileNavigation from "@/components/MobileNavigation";
 import { WaterIntakeEntry, UserSettings, CUP_SIZES } from "@/types/water";
-import { DropletIcon, Moon, Sun } from "lucide-react";
+import { DropletIcon, Moon, Sun, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   getWaterEntries, 
@@ -256,30 +257,46 @@ const Index = () => {
   
   return (
     <div className="min-h-screen water-wave-bg mobile-content">
-      <header className="flex items-center justify-between p-3 md:p-6 animate-fade-in">
-        <div className="flex items-center gap-2">
-          <DropletIcon className="h-5 w-5 md:h-6 md:w-6 text-primary animate-wave" />
-          <h1 className="text-lg md:text-2xl font-bold text-foreground">HydrateMe</h1>
+      {/* Enhanced Header */}
+      <header className="flex items-center justify-between p-4 md:p-6 animate-fade-in bg-card/30 backdrop-blur-sm border-b border-border/20">
+        <div className="flex items-center gap-3">
+          <DropletIcon className="h-6 w-6 md:h-7 md:w-7 text-primary animate-bounce-gentle" />
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">HydrateMe</h1>
+            <p className="text-xs md:text-sm text-muted-foreground hidden md:block">Stay hydrated, stay healthy</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        
+        {/* Desktop Theme Toggle and Settings */}
+        <div className="hidden md:flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
             className="rounded-full hover-scale"
           >
-            {theme === 'light' ? <Moon className="h-4 w-4 md:h-5 md:w-5" /> : <Sun className="h-4 w-4 md:h-5 md:w-5" />}
+            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
-          <div className="hidden md:block">
-            <GoalSettings 
-              dailyGoal={settings.dailyGoal}
-              onUpdateGoal={handleUpdateGoal}
-              reminderEnabled={settings.reminderEnabled}
-              onToggleReminder={handleToggleReminder}
-              reminderInterval={settings.reminderInterval}
-              onUpdateReminderInterval={handleUpdateReminderInterval}
-            />
-          </div>
+          <GoalSettings 
+            dailyGoal={settings.dailyGoal}
+            onUpdateGoal={handleUpdateGoal}
+            reminderEnabled={settings.reminderEnabled}
+            onToggleReminder={handleToggleReminder}
+            reminderInterval={settings.reminderInterval}
+            onUpdateReminderInterval={handleUpdateReminderInterval}
+          />
+        </div>
+        
+        {/* Mobile Settings Icon */}
+        <div className="md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setActiveTab('settings')}
+            className="rounded-full hover-scale"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
         </div>
       </header>
       
@@ -294,33 +311,37 @@ const Index = () => {
       />
       
       <main className="container px-3 md:px-4 pt-4 max-w-4xl">
-        {/* Main content - always visible */}
-        <div className="flex flex-col items-center mb-6 md:mb-8 animate-scale-in">
-          <WaterProgressCircle 
-            value={totalIntake} 
-            max={settings.dailyGoal} 
-            className="scale-90 md:scale-100"
-          />
-          <h2 className="mt-3 md:mt-4 text-lg md:text-xl font-medium text-foreground text-center animate-fade-in">
-            {totalIntake < settings.dailyGoal 
-              ? `${settings.dailyGoal - totalIntake}ml to go` 
-              : "Daily goal completed! 🎉"}
-          </h2>
-          {cupsProgress && (
-            <div className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground text-center animate-fade-in">
-              {cupsProgress.remaining > 0 
-                ? `${cupsProgress.completed}/${cupsProgress.total} cups • ${cupsProgress.remaining} more to go`
-                : `All ${cupsProgress.total} cups completed!`}
+        {/* Main Page Content - Only show progress circle and achievements on home */}
+        {activeTab === 'add' && (
+          <>
+            <div className="flex flex-col items-center mb-6 md:mb-8 animate-scale-in">
+              <WaterProgressCircle 
+                value={totalIntake} 
+                max={settings.dailyGoal} 
+                className="scale-90 md:scale-100"
+              />
+              <h2 className="mt-3 md:mt-4 text-lg md:text-xl font-medium text-foreground text-center animate-fade-in">
+                {totalIntake < settings.dailyGoal 
+                  ? `${settings.dailyGoal - totalIntake}ml to go` 
+                  : "Daily goal completed! 🎉"}
+              </h2>
+              {cupsProgress && (
+                <div className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground text-center animate-fade-in">
+                  {cupsProgress.remaining > 0 
+                    ? `${cupsProgress.completed}/${cupsProgress.total} cups • ${cupsProgress.remaining} more to go`
+                    : `All ${cupsProgress.total} cups completed!`}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        
-        <AchievementDisplay totalIntake={totalIntake} settings={settings} className="mb-4 md:mb-6 animate-fade-in" />
+            
+            <AchievementDisplay totalIntake={totalIntake} settings={settings} className="mb-4 md:mb-6 animate-fade-in" />
+          </>
+        )}
         
         {/* Mobile content based on active tab */}
         <div className="block md:hidden">
           <Card className="glass-card border-border/50 mb-4 animate-scale-in">
-            <CardContent className="p-3 md:p-6">
+            <CardContent className="p-4">
               {activeTab === 'add' && (
                 <div className="animate-fade-in">
                   <WaterIntakeForm 
@@ -331,6 +352,7 @@ const Index = () => {
               )}
               {activeTab === 'history' && (
                 <div className="animate-fade-in">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground">Water History</h3>
                   <WaterHistory 
                     entries={waterEntries}
                     onRemoveEntry={handleRemoveWater}
@@ -339,11 +361,13 @@ const Index = () => {
               )}
               {activeTab === 'trends' && (
                 <div className="animate-fade-in">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground">Hydration Trends</h3>
                   <HydrationTrends entries={waterEntries} />
                 </div>
               )}
               {activeTab === 'settings' && (
-                <div className="space-y-4 md:space-y-6 animate-fade-in">
+                <div className="space-y-4 animate-fade-in">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground">Settings</h3>
                   <ThemeSettings />
                   <GoalSettings 
                     dailyGoal={settings.dailyGoal}
@@ -362,7 +386,7 @@ const Index = () => {
         {/* Desktop content */}
         <div className="hidden md:block">
           <Card className="glass-card border-border/50 mb-6 animate-scale-in">
-            <CardContent className="p-4 md:p-6">
+            <CardContent className="p-6">
               <Tabs defaultValue="add" className="w-full">
                 <TabsList className="grid grid-cols-3 mb-6 bg-muted/50">
                   <TabsTrigger value="add" className="data-[state=active]:bg-background transition-all hover-scale">
@@ -398,7 +422,7 @@ const Index = () => {
           </Card>
 
           <Card className="glass-card border-border/50 mb-6 animate-scale-in">
-            <CardContent className="p-4 md:p-6">
+            <CardContent className="p-6">
               <ThemeSettings />
             </CardContent>
           </Card>
