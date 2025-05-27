@@ -18,30 +18,25 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Settings2 } from "lucide-react";
 import { toast } from "sonner";
+import { UserSettings } from "@/types/water";
 
 interface GoalSettingsProps {
-  dailyGoal: number;
-  onUpdateGoal: (goal: number) => void;
-  reminderEnabled: boolean;
-  onToggleReminder: (enabled: boolean) => void;
-  reminderInterval: number;
-  onUpdateReminderInterval: (minutes: number) => void;
+  settings: UserSettings;
+  onUpdateSettings: (settings: Partial<UserSettings>) => void;
 }
 
 const GoalSettings: React.FC<GoalSettingsProps> = ({
-  dailyGoal,
-  onUpdateGoal,
-  reminderEnabled,
-  onToggleReminder,
-  reminderInterval,
-  onUpdateReminderInterval
+  settings,
+  onUpdateSettings
 }) => {
-  const [localGoal, setLocalGoal] = useState(dailyGoal);
-  const [localInterval, setLocalInterval] = useState(reminderInterval);
+  const [localGoal, setLocalGoal] = useState(settings.dailyGoal);
+  const [localInterval, setLocalInterval] = useState(settings.reminderInterval);
+  const [localWakeTime, setLocalWakeTime] = useState(settings.wakeTime || '08:00');
+  const [localSleepTime, setLocalSleepTime] = useState(settings.sleepTime || '22:00');
   
   const handleSaveGoal = () => {
     if (localGoal >= 500 && localGoal <= 5000) {
-      onUpdateGoal(localGoal);
+      onUpdateSettings({ dailyGoal: localGoal });
       toast.success("Daily goal updated!");
     } else {
       toast.error("Please enter a value between 500ml and 5000ml");
@@ -51,8 +46,24 @@ const GoalSettings: React.FC<GoalSettingsProps> = ({
   const handleUpdateInterval = (value: string) => {
     const interval = parseInt(value);
     setLocalInterval(interval);
-    onUpdateReminderInterval(interval);
+    onUpdateSettings({ reminderInterval: interval });
     toast.success(`Reminder interval set to ${interval} minutes`);
+  };
+
+  const handleSmartSchedulingToggle = (enabled: boolean) => {
+    onUpdateSettings({ smartScheduling: enabled });
+    toast.success(`Smart scheduling ${enabled ? 'enabled' : 'disabled'}`);
+  };
+
+  const handleTimeUpdate = (field: 'wakeTime' | 'sleepTime', value: string) => {
+    if (field === 'wakeTime') {
+      setLocalWakeTime(value);
+      onUpdateSettings({ wakeTime: value });
+    } else {
+      setLocalSleepTime(value);
+      onUpdateSettings({ sleepTime: value });
+    }
+    toast.success(`${field === 'wakeTime' ? 'Wake' : 'Sleep'} time updated`);
   };
   
   return (
@@ -66,7 +77,7 @@ const GoalSettings: React.FC<GoalSettingsProps> = ({
           <Settings2 className="h-5 w-5 text-water-700" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4">
+      <PopoverContent className="w-80 p-4 max-h-96 overflow-y-auto">
         <div className="space-y-4">
           <h3 className="font-medium text-lg">Settings</h3>
           
@@ -102,30 +113,72 @@ const GoalSettings: React.FC<GoalSettingsProps> = ({
               </Label>
               <Switch
                 id="reminder-toggle"
-                checked={reminderEnabled}
-                onCheckedChange={onToggleReminder}
+                checked={settings.reminderEnabled}
+                onCheckedChange={(enabled) => onUpdateSettings({ reminderEnabled: enabled })}
               />
             </div>
             
-            {reminderEnabled && (
-              <div className="space-y-2">
-                <Label htmlFor="reminder-interval">Reminder Interval</Label>
-                <Select 
-                  value={localInterval.toString()} 
-                  onValueChange={handleUpdateInterval}
-                >
-                  <SelectTrigger id="reminder-interval">
-                    <SelectValue placeholder="Select interval" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">Every 30 minutes</SelectItem>
-                    <SelectItem value="45">Every 45 minutes</SelectItem>
-                    <SelectItem value="60">Every hour</SelectItem>
-                    <SelectItem value="90">Every 1.5 hours</SelectItem>
-                    <SelectItem value="120">Every 2 hours</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {settings.reminderEnabled && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="reminder-interval">Reminder Interval</Label>
+                  <Select 
+                    value={localInterval.toString()} 
+                    onValueChange={handleUpdateInterval}
+                  >
+                    <SelectTrigger id="reminder-interval">
+                      <SelectValue placeholder="Select interval" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="30">Every 30 minutes</SelectItem>
+                      <SelectItem value="45">Every 45 minutes</SelectItem>
+                      <SelectItem value="60">Every hour</SelectItem>
+                      <SelectItem value="90">Every 1.5 hours</SelectItem>
+                      <SelectItem value="120">Every 2 hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3 pt-2 border-t">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="smart-scheduling" className="cursor-pointer">
+                      Smart Scheduling
+                    </Label>
+                    <Switch
+                      id="smart-scheduling"
+                      checked={settings.smartScheduling || false}
+                      onCheckedChange={handleSmartSchedulingToggle}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Only receive reminders during awake hours
+                  </p>
+
+                  {settings.smartScheduling && (
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="wake-time">Wake Up Time</Label>
+                        <Input
+                          id="wake-time"
+                          type="time"
+                          value={localWakeTime}
+                          onChange={(e) => handleTimeUpdate('wakeTime', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="sleep-time">Sleep Time</Label>
+                        <Input
+                          id="sleep-time"
+                          type="time"
+                          value={localSleepTime}
+                          onChange={(e) => handleTimeUpdate('sleepTime', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>

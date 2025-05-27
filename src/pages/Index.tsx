@@ -25,12 +25,16 @@ import {
 import WeatherAdjustment from "@/components/WeatherAdjustment";
 import HydrationTrends from "@/components/HydrationTrends";
 import AchievementDisplay from "@/components/AchievementDisplay";
+import { shouldShowReminder } from "@/utils/sleepSchedule";
 
 const DEFAULT_SETTINGS: UserSettings = {
   dailyGoal: 2000,
   reminderEnabled: true,
   reminderInterval: 60,
-  setupCompleted: false
+  setupCompleted: false,
+  smartScheduling: false,
+  wakeTime: '08:00',
+  sleepTime: '22:00'
 };
 
 const Index = () => {
@@ -86,10 +90,16 @@ const Index = () => {
     
     // Setup new timer if reminders are enabled
     if (settings.reminderEnabled && settings.setupCompleted) {
-      const timerId = window.setInterval(() => {
-        setShowReminder(true);
-      }, settings.reminderInterval * 60 * 1000);
-      
+      const checkAndShowReminder = () => {
+        // Import the utility function
+        import('@/utils/sleepSchedule').then(({ shouldShowReminder }) => {
+          if (shouldShowReminder(settings)) {
+            setShowReminder(true);
+          }
+        });
+      };
+
+      const timerId = window.setInterval(checkAndShowReminder, settings.reminderInterval * 60 * 1000);
       setReminderTimerId(Number(timerId));
     }
     
@@ -98,7 +108,7 @@ const Index = () => {
         window.clearInterval(reminderTimerId);
       }
     };
-  }, [settings.reminderEnabled, settings.reminderInterval, settings.setupCompleted]);
+  }, [settings.reminderEnabled, settings.reminderInterval, settings.setupCompleted, settings.smartScheduling, settings.wakeTime, settings.sleepTime]);
   
   const handleAddWater = async (amount: number) => {
     try {
@@ -202,6 +212,21 @@ const Index = () => {
     }
   };
   
+  const handleUpdateSettings = async (newSettings: Partial<UserSettings>) => {
+    try {
+      const updatedSettings = { ...settings, ...newSettings };
+      await updateUserSettings(updatedSettings);
+      setSettings(updatedSettings);
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update settings. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
   const handleSetupComplete = async (newSettings: Partial<UserSettings>) => {
     try {
       // Merge new settings with existing ones
@@ -277,12 +302,8 @@ const Index = () => {
             {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
           <GoalSettings 
-            dailyGoal={settings.dailyGoal}
-            onUpdateGoal={handleUpdateGoal}
-            reminderEnabled={settings.reminderEnabled}
-            onToggleReminder={handleToggleReminder}
-            reminderInterval={settings.reminderInterval}
-            onUpdateReminderInterval={handleUpdateReminderInterval}
+            settings={settings}
+            onUpdateSettings={handleUpdateSettings}
           />
         </div>
       </header>
@@ -360,12 +381,8 @@ const Index = () => {
                     <h3 className="text-base font-semibold mb-3 text-foreground">Settings</h3>
                     <ThemeSettings />
                     <GoalSettings 
-                      dailyGoal={settings.dailyGoal}
-                      onUpdateGoal={handleUpdateGoal}
-                      reminderEnabled={settings.reminderEnabled}
-                      onToggleReminder={handleToggleReminder}
-                      reminderInterval={settings.reminderInterval}
-                      onUpdateReminderInterval={handleUpdateReminderInterval}
+                      settings={settings}
+                      onUpdateSettings={handleUpdateSettings}
                     />
                   </div>
                 )}

@@ -15,6 +15,9 @@ export interface UserSettings {
   weight?: number;
   activityLevel?: 'sedentary' | 'light' | 'moderate' | 'intense';
   cupSize?: 'xs' | 's' | 'm' | 'l' | 'xl';
+  wakeTime?: string; // Format: "HH:mm"
+  sleepTime?: string; // Format: "HH:mm"
+  smartScheduling?: boolean;
 }
 
 export interface CupSize {
