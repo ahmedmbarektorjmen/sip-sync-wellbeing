@@ -12,7 +12,8 @@ const ACHIEVEMENT_STORE = "achievements";
 const DEFAULT_SETTINGS: UserSettings = {
   dailyGoal: 2000,
   reminderEnabled: true,
-  reminderInterval: 60
+  reminderInterval: 60,
+  calculationMode: 'automatic'
 };
 
 // Helper function to open the database

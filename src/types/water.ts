@@ -13,11 +13,13 @@ export interface UserSettings {
   age?: number;
   gender?: 'male' | 'female';
   weight?: number;
+  height?: number; // in cm
   activityLevel?: 'sedentary' | 'light' | 'moderate' | 'intense';
   cupSize?: 'xs' | 's' | 'm' | 'l' | 'xl';
   wakeTime?: string; // Format: "HH:mm"
   sleepTime?: string; // Format: "HH:mm"
   smartScheduling?: boolean;
+  calculationMode?: 'automatic' | 'manual';
 }
 
 export interface CupSize {
@@ -27,8 +29,8 @@ export interface CupSize {
 }
 
 export const CUP_SIZES: CupSize[] = [
-  { id: 'xs', label: 'XS', volume: 120 },
-  { id: 's', label: 'S', volume: 240 },
+  { id: 'xs', label: 'XS', volume: 100 },
+  { id: 's', label: 'S', volume: 150 },
   { id: 'm', label: 'M', volume: 355 },
   { id: 'l', label: 'L', volume: 470 },
   { id: 'xl', label: 'XL', volume: 590 },

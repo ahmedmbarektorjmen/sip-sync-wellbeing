@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import * as v from "valibot";
 import WaterDrop from "./WaterDrop";
+import { calculateOptimalWaterIntake } from "@/utils/waterCalculation";
 
 interface SetupWizardProps {
   onComplete: (settings: Partial<UserSettings>) => void;
@@ -22,7 +23,10 @@ const FormSchema = v.object({
   age: v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(120)),
   gender: v.picklist(['male', 'female']),
   weight: v.pipe(v.number(), v.minValue(1), v.maxValue(500)),
+  height: v.pipe(v.number(), v.minValue(100), v.maxValue(250)),
   activityLevel: v.picklist(['sedentary', 'light', 'moderate', 'intense']),
+  calculationMode: v.picklist(['automatic', 'manual']),
+  manualGoal: v.optional(v.pipe(v.number(), v.minValue(500), v.maxValue(5000))),
   smartScheduling: v.optional(v.boolean()),
   wakeTime: v.optional(v.string()),
   sleepTime: v.optional(v.string()),
@@ -39,7 +43,10 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       age: undefined,
       gender: 'male',
       weight: undefined,
+      height: undefined,
       activityLevel: 'moderate',
+      calculationMode: 'automatic',
+      manualGoal: 2000,
       smartScheduling: false,
       wakeTime: '08:00',
       sleepTime: '22:00',
@@ -50,39 +57,19 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     try {
       const validatedData = v.parse(FormSchema, data);
       
-      // Calculate water intake based on factors
-      let dailyWaterInMl = validatedData.weight * 33; // 33ml per kg of body weight
+      let dailyWaterInMl: number;
       
-      // Age adjustment
-      if (validatedData.age < 30) {
-        dailyWaterInMl *= 1.1;
-      } else if (validatedData.age > 55) {
-        dailyWaterInMl *= 0.9;
+      if (validatedData.calculationMode === 'automatic') {
+        dailyWaterInMl = calculateOptimalWaterIntake({
+          age: validatedData.age,
+          gender: validatedData.gender,
+          weight: validatedData.weight,
+          height: validatedData.height,
+          activityLevel: validatedData.activityLevel
+        });
+      } else {
+        dailyWaterInMl = validatedData.manualGoal || 2000;
       }
-      
-      // Gender adjustment
-      if (validatedData.gender === 'male') {
-        dailyWaterInMl *= 1.1;
-      }
-      
-      // Activity level adjustment
-      switch (validatedData.activityLevel) {
-        case 'sedentary':
-          dailyWaterInMl *= 0.8;
-          break;
-        case 'light':
-          dailyWaterInMl *= 0.95;
-          break;
-        case 'moderate':
-          dailyWaterInMl *= 1.1;
-          break;
-        case 'intense':
-          dailyWaterInMl *= 1.4;
-          break;
-      }
-      
-      // Round to nearest 50ml
-      dailyWaterInMl = Math.round(dailyWaterInMl / 50) * 50;
       
       // Calculate reminder interval based on awake hours if smart scheduling is enabled
       let reminderInterval = 60; // default 1 hour
@@ -119,7 +106,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   };
   
   const nextStep = () => {
-    if (step < 5) {
+    if (step < 6) {
       setStep(step + 1);
     } else {
       form.handleSubmit(onSubmit)();
@@ -236,10 +223,10 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         return (
           <>
             <CardHeader>
-              <CardTitle className="text-center text-water-800">Your Weight</CardTitle>
-              <CardDescription className="text-center">Weight is an important factor in determining water needs</CardDescription>
+              <CardTitle className="text-center text-water-800">Physical Information</CardTitle>
+              <CardDescription className="text-center">Weight and height are important factors in determining water needs</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               <FormField
                 control={form.control}
                 name="weight"
@@ -250,6 +237,25 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                       <Input 
                         type="number" 
                         placeholder="Enter your weight" 
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber || undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="height"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Height (cm)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="Enter your height" 
                         {...field}
                         onChange={(e) => field.onChange(e.target.valueAsNumber || undefined)}
                       />
@@ -298,6 +304,79 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         );
 
       case 5:
+        return (
+          <>
+            <CardHeader>
+              <CardTitle className="text-center text-water-800">Water Goal Calculation</CardTitle>
+              <CardDescription className="text-center">Choose how your daily water goal is calculated</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <FormField
+                control={form.control}
+                name="calculationMode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Calculation Mode</FormLabel>
+                    <FormControl>
+                      <RadioGroup 
+                        className="flex flex-col space-y-3" 
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <div className="flex items-start space-x-2 border border-water-200 p-3 rounded-lg hover:bg-water-50 transition-colors">
+                          <RadioGroupItem id="calc-auto" value="automatic" className="mt-1" />
+                          <div className="flex-1">
+                            <Label htmlFor="calc-auto" className="cursor-pointer font-medium">
+                              Automatic Calculation
+                            </Label>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Goal adjusts based on your personal factors and weather
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-2 border border-water-200 p-3 rounded-lg hover:bg-water-50 transition-colors">
+                          <RadioGroupItem id="calc-manual" value="manual" className="mt-1" />
+                          <div className="flex-1">
+                            <Label htmlFor="calc-manual" className="cursor-pointer font-medium">
+                              Manual Goal
+                            </Label>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Set a fixed daily water goal
+                            </p>
+                          </div>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {form.watch('calculationMode') === 'manual' && (
+                <FormField
+                  control={form.control}
+                  name="manualGoal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Daily Water Goal (ml)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Enter your daily goal" 
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber || undefined)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </CardContent>
+          </>
+        );
+
+      case 6:
         return (
           <>
             <CardHeader>
@@ -372,7 +451,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     }
   };
   
-  const isLastStep = step === 5;
+  const isLastStep = step === 6;
   
   return (
     <div className="min-h-screen water-wave-bg flex items-center justify-center p-4">
