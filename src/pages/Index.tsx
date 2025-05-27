@@ -280,19 +280,19 @@ const Index = () => {
   }
   
   return (
-    <div className="min-h-screen water-wave-bg">
+    <div className="min-h-screen water-wave-bg responsive-container">
       {/* Enhanced Header */}
-      <header className="flex items-center justify-between p-3 md:p-6 animate-fade-in bg-card/30 backdrop-blur-sm border-b border-border/20">
-        <div className="flex items-center gap-2 md:gap-3">
-          <DropletIcon className="h-5 w-5 md:h-7 md:w-7 text-primary animate-bounce-gentle" />
-          <div>
-            <h1 className="text-lg md:text-2xl font-bold text-foreground">HydrateMe</h1>
+      <header className="flex items-center justify-between p-2 md:p-6 animate-fade-in bg-card/30 backdrop-blur-sm border-b border-border/20 w-full">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+          <DropletIcon className="h-4 w-4 md:h-7 md:w-7 text-primary animate-bounce-gentle flex-shrink-0" />
+          <div className="min-w-0 flex-1">
+            <h1 className="text-sm md:text-2xl font-bold text-foreground truncate">HydrateMe</h1>
             <p className="text-xs text-muted-foreground hidden md:block">Stay hydrated, stay healthy</p>
           </div>
         </div>
         
-        {/* Desktop Theme Toggle and Settings */}
-        <div className="hidden md:flex items-center gap-2">
+        {/* Desktop Theme Toggle */}
+        <div className="hidden md:flex items-center gap-2 flex-shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -309,35 +309,35 @@ const Index = () => {
       </header>
       
       {showReminder && (
-        <ReminderBanner onDismiss={() => setShowReminder(false)} className="mx-2 md:mx-8 animate-slide-in-right" />
+        <ReminderBanner onDismiss={() => setShowReminder(false)} className="mx-1 md:mx-8 animate-slide-in-right" />
       )}
       
       <WeatherAdjustment 
         settings={settings} 
         onUpdateGoal={handleUpdateGoal} 
-        className="mx-2 md:mx-8 mb-3 md:mb-4 animate-fade-in"
+        className="mx-1 md:mx-8 mb-2 md:mb-4 animate-fade-in"
       />
       
       {/* Mobile Content Container */}
-      <div className="pb-20 md:pb-0">
-        <main className="container px-2 md:px-4 pt-3 md:pt-4 max-w-4xl mx-auto">
+      <div className="pb-20 md:pb-0 mobile-safe-area">
+        <main className="w-full px-1 md:px-4 pt-2 md:pt-4 max-w-4xl mx-auto responsive-container">
           {/* Main Page Content - Only show progress circle and achievements on home */}
           {activeTab === 'add' && (
-            <div className="mb-4 md:mb-8">
-              <div className="flex flex-col items-center mb-4 md:mb-6 animate-scale-in">
-                <div className="scale-75 sm:scale-90 md:scale-100">
+            <div className="mb-3 md:mb-8 w-full">
+              <div className="flex flex-col items-center mb-3 md:mb-6 animate-scale-in w-full">
+                <div className="scale-50 sm:scale-75 md:scale-100 w-full flex justify-center">
                   <WaterProgressCircle 
                     value={totalIntake} 
                     max={settings.dailyGoal} 
                   />
                 </div>
-                <h2 className="mt-2 md:mt-4 text-base md:text-xl font-medium text-foreground text-center animate-fade-in px-2">
+                <h2 className="mt-1 md:mt-4 text-xs md:text-xl font-medium text-foreground text-center animate-fade-in px-1 max-w-full">
                   {totalIntake < settings.dailyGoal 
                     ? `${settings.dailyGoal - totalIntake}ml to go` 
                     : "Daily goal completed! 🎉"}
                 </h2>
                 {cupsProgress && (
-                  <div className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground text-center animate-fade-in px-2">
+                  <div className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground text-center animate-fade-in px-1 max-w-full">
                     {cupsProgress.remaining > 0 
                       ? `${cupsProgress.completed}/${cupsProgress.total} cups • ${cupsProgress.remaining} more to go`
                       : `All ${cupsProgress.total} cups completed!`}
@@ -345,16 +345,16 @@ const Index = () => {
                 )}
               </div>
               
-              <AchievementDisplay totalIntake={totalIntake} settings={settings} className="mb-3 md:mb-6 animate-fade-in mx-2" />
+              <AchievementDisplay totalIntake={totalIntake} settings={settings} className="mb-2 md:mb-6 animate-fade-in mx-1 max-w-full" />
             </div>
           )}
           
           {/* Mobile content based on active tab */}
-          <div className="block md:hidden">
-            <Card className="glass-card border-border/50 mx-2 mb-4 animate-scale-in">
-              <CardContent className="p-3">
+          <div className="block md:hidden w-full">
+            <Card className="glass-card border-border/50 mx-1 mb-3 animate-scale-in max-w-full">
+              <CardContent className="p-2">
                 {activeTab === 'add' && (
-                  <div className="animate-fade-in">
+                  <div className="animate-fade-in w-full">
                     <WaterIntakeForm 
                       onAddWater={handleAddWater} 
                       settings={settings}
@@ -362,8 +362,8 @@ const Index = () => {
                   </div>
                 )}
                 {activeTab === 'history' && (
-                  <div className="animate-fade-in">
-                    <h3 className="text-base font-semibold mb-3 text-foreground">Water History</h3>
+                  <div className="animate-fade-in w-full">
+                    <h3 className="text-sm font-semibold mb-2 text-foreground">Water History</h3>
                     <WaterHistory 
                       entries={waterEntries}
                       onRemoveEntry={handleRemoveWater}
@@ -371,19 +371,21 @@ const Index = () => {
                   </div>
                 )}
                 {activeTab === 'trends' && (
-                  <div className="animate-fade-in">
-                    <h3 className="text-base font-semibold mb-3 text-foreground">Hydration Trends</h3>
+                  <div className="animate-fade-in w-full">
+                    <h3 className="text-sm font-semibold mb-2 text-foreground">Hydration Trends</h3>
                     <HydrationTrends entries={waterEntries} />
                   </div>
                 )}
                 {activeTab === 'settings' && (
-                  <div className="space-y-4 animate-fade-in">
-                    <h3 className="text-base font-semibold mb-3 text-foreground">Settings</h3>
+                  <div className="space-y-3 animate-fade-in w-full">
+                    <h3 className="text-sm font-semibold mb-2 text-foreground">Settings</h3>
                     <ThemeSettings />
-                    <GoalSettings 
-                      settings={settings}
-                      onUpdateSettings={handleUpdateSettings}
-                    />
+                    <div className="pt-2">
+                      <GoalSettings 
+                        settings={settings}
+                        onUpdateSettings={handleUpdateSettings}
+                      />
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -391,7 +393,7 @@ const Index = () => {
           </div>
           
           {/* Desktop content */}
-          <div className="hidden md:block">
+          <div className="hidden md:block w-full">
             <Card className="glass-card border-border/50 mb-6 animate-scale-in">
               <CardContent className="p-6">
                 <Tabs defaultValue="add" className="w-full">
