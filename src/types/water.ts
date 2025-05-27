@@ -31,7 +31,7 @@ export interface CupSize {
 export const CUP_SIZES: CupSize[] = [
   { id: 'xs', label: 'XS', volume: 100 },
   { id: 's', label: 'S', volume: 150 },
-  { id: 'm', label: 'M', volume: 355 },
+  { id: 'm', label: 'M', volume: 200 },
   { id: 'l', label: 'L', volume: 470 },
   { id: 'xl', label: 'XL', volume: 590 },
 ];

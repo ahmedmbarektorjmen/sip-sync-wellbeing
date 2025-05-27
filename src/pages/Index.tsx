@@ -291,7 +291,7 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Desktop Theme Toggle and Settings */}
+        {/* Desktop Theme Toggle */}
         <div className="hidden md:flex items-center gap-2 flex-shrink-0">
           <Button
             variant="ghost"
@@ -315,19 +315,19 @@ const Index = () => {
       />
       
       {/* Mobile Content Container */}
-      <div className="pb-20 md:pb-0 mobile-safe-area">
+      <div className="mobile-safe-area">
         <main className="w-full px-1 md:px-4 pt-2 md:pt-4 max-w-4xl mx-auto responsive-container">
           {/* Main Page Content - Only show progress circle and achievements on home */}
           {activeTab === 'add' && (
             <div className="mb-3 md:mb-8 w-full">
               <div className="flex flex-col items-center mb-3 md:mb-6 animate-scale-in w-full">
-                <div className="scale-50 sm:scale-75 md:scale-100 w-full flex justify-center">
+                <div className="w-full flex justify-center mb-2">
                   <WaterProgressCircle 
                     value={totalIntake} 
                     max={settings.dailyGoal} 
                   />
                 </div>
-                <h2 className="mt-1 md:mt-4 text-xs md:text-xl font-medium text-foreground text-center animate-fade-in px-1 max-w-full">
+                <h2 className="text-sm md:text-xl font-medium text-foreground text-center animate-fade-in px-1 max-w-full">
                   {totalIntake < settings.dailyGoal 
                     ? `${settings.dailyGoal - totalIntake}ml to go` 
                     : "Daily goal completed! 🎉"}
