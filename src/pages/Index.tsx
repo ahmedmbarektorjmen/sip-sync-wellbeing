@@ -291,7 +291,7 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Desktop Theme Toggle */}
+        {/* Desktop Theme Toggle and Settings */}
         <div className="hidden md:flex items-center gap-2 flex-shrink-0">
           <Button
             variant="ghost"
@@ -301,10 +301,6 @@ const Index = () => {
           >
             {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
-          <GoalSettings 
-            settings={settings}
-            onUpdateSettings={handleUpdateSettings}
-          />
         </div>
       </header>
       
@@ -377,10 +373,11 @@ const Index = () => {
                   </div>
                 )}
                 {activeTab === 'settings' && (
-                  <div className="space-y-3 animate-fade-in w-full">
-                    <h3 className="text-sm font-semibold mb-2 text-foreground">Settings</h3>
+                  <div className="space-y-4 animate-fade-in w-full">
+                    <h3 className="text-sm font-semibold mb-3 text-foreground">Settings</h3>
                     <ThemeSettings />
-                    <div className="pt-2">
+                    <div className="pt-3 border-t">
+                      <h4 className="text-sm font-medium mb-3 text-foreground">Water Goals & Reminders</h4>
                       <GoalSettings 
                         settings={settings}
                         onUpdateSettings={handleUpdateSettings}
@@ -432,7 +429,16 @@ const Index = () => {
 
             <Card className="glass-card border-border/50 mb-6 animate-scale-in">
               <CardContent className="p-6">
-                <ThemeSettings />
+                <div className="space-y-6">
+                  <ThemeSettings />
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold mb-4 text-foreground">Water Goals & Reminders</h3>
+                    <GoalSettings 
+                      settings={settings}
+                      onUpdateSettings={handleUpdateSettings}
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
