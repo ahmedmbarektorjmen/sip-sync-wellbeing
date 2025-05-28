@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,6 +11,7 @@ import ReminderBanner from "@/components/ReminderBanner";
 import SetupWizard from "@/components/SetupWizard";
 import ThemeSettings from "@/components/ThemeSettings";
 import MobileNavigation from "@/components/MobileNavigation";
+import CustomToastContainer from "@/components/CustomToastContainer";
 import { WaterIntakeEntry, UserSettings, CUP_SIZES } from "@/types/water";
 import { DropletIcon, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,13 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('add');
   
+  // Swipe handling
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const tabs = ['add', 'history', 'trends', 'settings'];
+  
   // Load data from IndexedDB on mount
   useEffect(() => {
     const loadData = async () => {
@@ -79,7 +87,7 @@ const Index = () => {
     
     loadData();
   }, [toast]);
-  
+
   // Setup reminders
   useEffect(() => {
     // Clear existing timer
@@ -109,6 +117,36 @@ const Index = () => {
       }
     };
   }, [settings.reminderEnabled, settings.reminderInterval, settings.setupCompleted, settings.smartScheduling, settings.wakeTime, settings.sleepTime]);
+
+  // Swipe detection
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    const currentIndex = tabs.indexOf(activeTab);
+    
+    if (isLeftSwipe && currentIndex < tabs.length - 1) {
+      setActiveTab(tabs[currentIndex + 1]);
+    }
+    
+    if (isRightSwipe && currentIndex > 0) {
+      setActiveTab(tabs[currentIndex - 1]);
+    }
+  };
   
   const handleAddWater = async (amount: number) => {
     try {
@@ -281,6 +319,8 @@ const Index = () => {
   
   return (
     <div className="min-h-screen water-wave-bg responsive-container">
+      <CustomToastContainer />
+      
       {/* Enhanced Header */}
       <header className="flex items-center justify-between p-2 md:p-6 animate-fade-in bg-card/30 backdrop-blur-sm border-b border-border/20 w-full">
         <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
@@ -314,8 +354,14 @@ const Index = () => {
         className="mx-1 md:mx-8 mb-2 md:mb-4 animate-fade-in"
       />
       
-      {/* Mobile Content Container */}
-      <div className="mobile-safe-area">
+      {/* Mobile Content Container with Swipe */}
+      <div 
+        className="mobile-safe-area"
+        ref={containerRef}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <main className="w-full px-1 md:px-4 pt-2 md:pt-4 max-w-4xl mx-auto responsive-container">
           {/* Main Page Content - Only show progress circle and achievements on home */}
           {activeTab === 'add' && (

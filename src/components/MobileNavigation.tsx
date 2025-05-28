@@ -16,10 +16,15 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ activeTab, onTabCha
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
+  const currentIndex = navItems.findIndex(item => item.id === activeTab);
+
   return (
     <div className="mobile-nav md:hidden">
-      <div className="flex justify-around items-center px-1 py-1 gap-1 w-full">
-        {navItems.map((item) => {
+      <div className="flex justify-around items-center px-1 py-1 gap-1 w-full relative">
+        {/* Swipe indicator */}
+        <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-muted-foreground/30 rounded-full" />
+        
+        {navItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           
@@ -28,7 +33,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ activeTab, onTabCha
               key={item.id}
               onClick={() => onTabChange(item.id)}
               className={cn(
-                "flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg transition-all duration-300 hover-scale min-w-0 flex-1 max-w-[80px]",
+                "flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg transition-all duration-300 hover-scale min-w-0 flex-1 max-w-[80px] relative",
                 isActive 
                   ? "text-primary bg-primary/15 scale-105 shadow-lg" 
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
@@ -47,6 +52,21 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ activeTab, onTabCha
               {isActive && (
                 <div className="w-3 h-0.5 bg-primary rounded-full animate-scale-in" />
               )}
+              
+              {/* Navigation dots */}
+              <div className="flex gap-1 mt-0.5">
+                {navItems.map((_, dotIndex) => (
+                  <div
+                    key={dotIndex}
+                    className={cn(
+                      "w-1 h-1 rounded-full transition-all duration-200",
+                      dotIndex === currentIndex 
+                        ? "bg-primary" 
+                        : "bg-muted-foreground/20"
+                    )}
+                  />
+                ))}
+              </div>
             </button>
           );
         })}
