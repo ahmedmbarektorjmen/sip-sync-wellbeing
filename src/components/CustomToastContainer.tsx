@@ -27,17 +27,19 @@ const SwipeableToast: React.FC<SwipeableToastProps> = ({
   const toastRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
     setIsDragging(true);
     setStartY(e.touches[0].clientY);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
+    e.preventDefault();
     
     const currentY = e.touches[0].clientY;
     const deltaY = currentY - startY;
     
-    // Only allow dragging in the dismiss direction
+    // Mobile: swipe down to dismiss, Desktop: swipe up to dismiss
     if (isMobile && deltaY > 0) {
       setDragY(deltaY);
     } else if (!isMobile && deltaY < 0) {
@@ -45,7 +47,8 @@ const SwipeableToast: React.FC<SwipeableToastProps> = ({
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
     if (!isDragging) return;
     
     const threshold = 80;
@@ -61,6 +64,7 @@ const SwipeableToast: React.FC<SwipeableToastProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsDragging(true);
     setStartY(e.clientY);
   };
@@ -102,13 +106,19 @@ const SwipeableToast: React.FC<SwipeableToastProps> = ({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, startY]);
+  }, [isDragging, startY, isMobile, dragY]);
+
+  const handleCloseClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onRemove(id);
+  };
 
   return (
     <div
       ref={toastRef}
       className={cn(
-        "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-4 pr-8 shadow-lg transition-all duration-200 cursor-grab",
+        "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-4 pr-8 shadow-lg transition-all duration-200 cursor-grab max-w-sm mx-auto",
         isDragging && "cursor-grabbing",
         variant === 'default' && "border bg-background text-foreground",
         variant === 'destructive' && "destructive group border-destructive bg-destructive text-destructive-foreground"
@@ -122,7 +132,7 @@ const SwipeableToast: React.FC<SwipeableToastProps> = ({
       onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown}
     >
-      <div className="grid gap-1">
+      <div className="grid gap-1 flex-1">
         {title && (
           <div className="text-sm font-semibold">{title}</div>
         )}
@@ -132,9 +142,9 @@ const SwipeableToast: React.FC<SwipeableToastProps> = ({
       </div>
       
       <button
-        onClick={() => onRemove(id)}
+        onClick={handleCloseClick}
         className={cn(
-          "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
+          "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-100 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 flex-shrink-0",
           variant === 'destructive' && "text-red-300 hover:text-red-50 focus:ring-red-400"
         )}
       >
@@ -171,8 +181,8 @@ const CustomToastContainer: React.FC = () => {
     <div className={cn(
       "fixed z-[100] flex max-h-screen w-full flex-col p-4 space-y-2",
       isMobile 
-        ? "bottom-20 left-0 right-0 items-center" 
-        : "top-20 right-0 items-end max-w-[420px]"
+        ? "bottom-20 left-0 right-0 items-center pb-[calc(1rem+env(safe-area-inset-bottom))]" 
+        : "top-32 right-0 items-end max-w-[420px] pt-4"
     )}>
       {toasts.map((toast) => (
         <SwipeableToast

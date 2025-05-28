@@ -33,7 +33,7 @@ const HydrationTrends: React.FC<HydrationTrendsProps> = ({ entries }) => {
     };
     
     loadData();
-  }, [entries]); // Reload when entries change
+  }, [entries]);
   
   if (isLoading) {
     return <div className="flex justify-center p-8">Loading trends...</div>;
@@ -53,35 +53,37 @@ const HydrationTrends: React.FC<HydrationTrendsProps> = ({ entries }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       <h2 className="text-xl font-semibold text-water-800">Hydration Trends</h2>
       
       <Tabs defaultValue="weekly" className="w-full">
-        <TabsList className="grid grid-cols-2 mb-6 bg-water-100/50 w-full md:w-60">
-          <TabsTrigger value="weekly" className="data-[state=active]:bg-white">
-            <span className="flex items-center gap-1">
-              <ChartBarIcon className="h-4 w-4" />
-              <span>Weekly</span>
-            </span>
+        <TabsList className="grid grid-cols-2 mb-6 bg-muted/50 w-full max-w-sm mx-auto h-10">
+          <TabsTrigger 
+            value="weekly" 
+            className="flex items-center gap-2 text-sm px-3 py-2 h-8 data-[state=active]:bg-background data-[state=active]:text-foreground"
+          >
+            <ChartBarIcon className="h-4 w-4" />
+            <span>Weekly</span>
           </TabsTrigger>
-          <TabsTrigger value="monthly" className="data-[state=active]:bg-white">
-            <span className="flex items-center gap-1">
-              <ChartLineIcon className="h-4 w-4" />
-              <span>Monthly</span>
-            </span>
+          <TabsTrigger 
+            value="monthly" 
+            className="flex items-center gap-2 text-sm px-3 py-2 h-8 data-[state=active]:bg-background data-[state=active]:text-foreground"
+          >
+            <ChartLineIcon className="h-4 w-4" />
+            <span>Monthly</span>
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="weekly" className="mt-0">
-          <div className="h-[300px] w-full">
+          <div className="h-[400px] w-full">
             <ChartContainer config={chartConfig}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weeklyData}>
+                <BarChart data={weeklyData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="day" />
                   <YAxis 
                     label={{ value: 'ml', angle: -90, position: 'insideLeft' }} 
-                    width={40}
+                    width={50}
                   />
                   <Tooltip formatter={(value) => [`${value}ml`, 'Intake']} />
                   <Bar 
@@ -97,15 +99,15 @@ const HydrationTrends: React.FC<HydrationTrendsProps> = ({ entries }) => {
         </TabsContent>
         
         <TabsContent value="monthly" className="mt-0">
-          <div className="h-[300px] w-full">
+          <div className="h-[400px] w-full">
             <ChartContainer config={chartConfig}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
+                <BarChart data={monthlyData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis 
                     label={{ value: 'ml', angle: -90, position: 'insideLeft' }} 
-                    width={40}
+                    width={50}
                   />
                   <Tooltip formatter={(value) => [`${value}ml`, 'Intake']} />
                   <Bar 
