@@ -18,7 +18,7 @@ const WaterProgressCircle: React.FC<WaterProgressCircleProps> = ({
   
   return (
     <div className={cn("relative flex flex-col items-center justify-center", className)}>
-      <div className="relative w-44 h-44 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-water-100 bg-water-50/50 shadow-inner">
+      <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden border-4 border-water-100 bg-water-50/50 shadow-inner">
         <div 
           className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-water-500 to-water-400 transition-all duration-1000 ease-out"
           style={{ height: `${percentage}%` }}
@@ -33,9 +33,9 @@ const WaterProgressCircle: React.FC<WaterProgressCircleProps> = ({
         </div>
       </div>
       
-      <div className="absolute flex flex-col items-center justify-center bg-white/90 rounded-full w-28 h-28 md:w-32 md:h-32 shadow-md">
-        <span className="text-2xl md:text-4xl font-bold text-water-600">{percentage}%</span>
-        <span className="text-xs md:text-sm text-water-800">{value} / {max}ml</span>
+      <div className="absolute flex flex-col items-center justify-center bg-white/90 rounded-full w-36 h-36 sm:w-40 sm:h-40 md:w-32 md:h-32 lg:w-36 lg:h-36 shadow-md">
+        <span className="text-3xl sm:text-4xl md:text-3xl lg:text-4xl font-bold text-water-600">{percentage}%</span>
+        <span className="text-sm sm:text-base md:text-sm lg:text-base text-water-800">{value} / {max}ml</span>
       </div>
     </div>
   );

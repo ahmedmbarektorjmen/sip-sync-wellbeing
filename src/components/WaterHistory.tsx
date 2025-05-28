@@ -24,7 +24,7 @@ const WaterHistory: React.FC<WaterHistoryProps> = ({ entries, onRemoveEntry }) =
     <div className="space-y-4">
       <h2 className="text-xl font-semibold text-foreground">Today's Intake</h2>
       
-      <ScrollArea className="h-[300px] pr-4">
+      <ScrollArea className="h-[400px] md:h-[350px] pr-4">
         <div className="space-y-1">
           {entries.map((entry, index) => (
             <React.Fragment key={entry.id}>

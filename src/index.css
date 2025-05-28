@@ -105,6 +105,34 @@
     overflow-x: hidden;
     width: 100%;
     max-width: 100vw;
+    height: 100%;
+  }
+  
+  /* Custom scrollbar styling for all scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+    border: 1px solid hsl(var(--muted));
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+  
+  /* Firefox scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) hsl(var(--muted));
   }
   
   /* Enhanced text selection prevention */
@@ -194,6 +222,14 @@
     font-size: 14px;
     padding: 0;
     margin: 0;
+    overflow-y: auto;
+    height: 100vh;
+  }
+  
+  .water-wave-bg {
+    min-height: 100vh;
+    overflow-y: auto;
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0));
   }
   
   .mobile-nav {
@@ -251,7 +287,14 @@
   
   /* Mobile safe area for main content */
   .mobile-safe-area {
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0));
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0));
+    margin-bottom: 1rem;
+  }
+  
+  /* Mobile header height increase */
+  header {
+    min-height: 80px !important;
+    padding: 1rem 0.5rem !important;
   }
 }
 
@@ -307,6 +350,10 @@
   
   html {
     font-size: 16px;
+  }
+  
+  body {
+    overflow-y: auto;
   }
   
   .container {
